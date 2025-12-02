@@ -1,4 +1,4 @@
-# GeoLearnHub
+# TerraLearn
 
 A comprehensive Geography learning platform with interactive maps, lessons, and quizzes for Grade 12 students.
 
