@@ -7,7 +7,9 @@ const connectDB = async () => {
   try {
     console.log('🔗 Connecting to MongoDB Atlas...');
     
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    // Support multiple env var names for the Mongo connection string
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGO_URI || process.env.MONGO_URL;
+    const conn = await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 30000, // 30 seconds timeout for Atlas
       socketTimeoutMS: 45000,
       maxPoolSize: 10,
@@ -40,7 +42,25 @@ const connectDB = async () => {
     console.error('4. Add your current IP address (or 0.0.0.0/0 for all IPs)');
     console.error('5. Wait a few minutes for changes to apply');
     console.error('\n📞 Connection string used:');
-    console.error(process.env.MONGODB_URI.replace(/\/\/(.*):(.*)@/, '//***:***@'));
+    if (process.env.MONGODB_URI) {
+      try {
+            // Print the value used (redact credentials if possible)
+            try {
+              const used = mongoUri || process.env.MONGODB_URI || process.env.MONGODB_URL || '(none)';
+              if (used && typeof used === 'string') {
+                console.error(used.replace(/\/\/(.*):(.*)@/, '//***:***@'));
+              } else {
+                console.error('(none) MONGODB URI/URL is not set in environment');
+              }
+            } catch (e) {
+              console.error('(unable to redact) ' + (mongoUri || process.env.MONGODB_URI || process.env.MONGODB_URL));
+            }
+      } catch (e) {
+        console.error('(unable to redact) ' + process.env.MONGODB_URI);
+      }
+    } else {
+      console.error('(none) MONGODB_URI is not set in environment');
+    }
     
     throw error;
   }
