@@ -117,3 +117,61 @@ progressSchema.statics.getUserProgress = function(userId) {
 };
 
 export default mongoose.model('Progress', progressSchema);
+
+const userProgressSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
+  },
+  course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course'
+  },
+  lesson: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Lesson'
+  },
+  quiz: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Quiz'
+  },
+  country: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Country'
+  },
+  activityType: {
+    type: String,
+    enum: ['lesson_started', 'lesson_completed', 'quiz_attempted', 'quiz_completed', 'country_studied', 'course_enrolled', 'achievement_earned'],
+    required: true
+  },
+  data: {
+    score: Number,
+    timeSpent: Number, // in seconds
+    attempts: Number,
+    correctAnswers: Number,
+    totalQuestions: Number,
+    progressPercentage: Number,
+    xpEarned: Number
+  },
+  metadata: {
+    device: String,
+    browser: String,
+    ipAddress: String,
+    location: mongoose.Schema.Types.Mixed
+  },
+  completedAt: Date,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    index: true
+  }
+}, {
+  timestamps: true
+});
+
+// Compound index for efficient querying
+userProgressSchema.index({ user: 1, createdAt: -1 });
+userProgressSchema.index({ user: 1, activityType: 1 });
+userProgressSchema.index({ user: 1, course: 1, createdAt: -1 });

@@ -112,3 +112,87 @@ quizSchema.statics.findActive = function() {
 };
 
 export default mongoose.model('Quiz', quizSchema);
+
+const quizAttemptSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  quiz: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Quiz',
+    required: true
+  },
+  attemptNumber: {
+    type: Number,
+    default: 1
+  },
+  answers: [{
+    question: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Question'
+    },
+    userAnswer: mongoose.Schema.Types.Mixed,
+    isCorrect: Boolean,
+    timeSpent: Number, // in seconds
+    pointsEarned: Number,
+    answeredAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  score: {
+    percentage: {
+      type: Number,
+      min: 0,
+      max: 100
+    },
+    points: Number,
+    totalPoints: Number
+  },
+  time: {
+    startedAt: {
+      type: Date,
+      default: Date.now
+    },
+    completedAt: Date,
+    totalTime: Number // in seconds
+  },
+  status: {
+    type: String,
+    enum: ['in_progress', 'completed', 'abandoned', 'timed_out'],
+    default: 'in_progress'
+  },
+  passed: Boolean,
+  xpEarned: Number,
+  feedback: String,
+  metadata: {
+    device: String,
+    browser: String,
+    questionsOrder: [mongoose.Schema.Types.ObjectId]
+  }
+}, {
+  timestamps: true
+});
+
+// Index for user quiz history
+quizAttemptSchema.index({ user: 1, quiz: 1, createdAt: -1 });
+quizAttemptSchema.index({ user: 1, status: 1 });
+
+// Calculate score before saving
+quizAttemptSchema.pre('save', function(next) {
+  if (this.answers.length > 0) {
+    const correctAnswers = this.answers.filter(answer => answer.isCorrect).length;
+    this.score.percentage = (correctAnswers / this.answers.length) * 100;
+    this.score.points = this.answers.reduce((sum, answer) => sum + (answer.pointsEarned || 0), 0);
+    this.score.totalPoints = this.answers.reduce((sum, answer) => sum + (answer.question?.points || 0), 0);
+    this.passed = this.score.percentage >= (this.quiz?.passingScore || 70);
+  }
+  
+  if (this.time.completedAt && this.time.startedAt) {
+    this.time.totalTime = Math.floor((this.time.completedAt - this.time.startedAt) / 1000);
+  }
+  
+  next();
+});

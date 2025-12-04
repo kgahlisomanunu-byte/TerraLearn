@@ -2,6 +2,10 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
   email: {
     type: String,
     required: true,
@@ -10,16 +14,37 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
+    enum: ['admin', 'teacher', 'learner'],
+    default: 'learner',
     index: true
-  },
-  isActive: {
-    type: Boolean,
-    default: true
   },
   password: {
     type: String,
     required: true
+  },
+  bio: {
+    type: String,
+    maxlength: 500
+  },
+  gradeLevel: {
+    type: String,
+    enum: ['Grade 10', 'Grade 11', 'Grade 12']
+  },
+  avatar: String,
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 // Pre-save middleware to hash password

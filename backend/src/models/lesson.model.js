@@ -103,3 +103,126 @@ lessonSchema.methods.isAccessible = function() {
 };
 
 export default mongoose.model('Lesson', lessonSchema);
+
+({
+  title: {
+    type: String,
+    required: true
+  },
+  slug: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+    required: true
+  },
+  order: {
+    type: Number,
+    required: true
+  },
+  contentType: {
+    type: String,
+    enum: ['video', 'text', 'interactive', 'quiz', 'game', 'mixed'],
+    default: 'mixed'
+  },
+  content: {
+    video: {
+      url: String,
+      duration: Number,
+      transcript: String,
+      subtitles: [{
+        language: String,
+        url: String
+      }]
+    },
+    text: {
+      html: String,
+      markdown: String
+    },
+    images: [{
+      url: String,
+      caption: String,
+      alt: String
+    }],
+    audio: [{
+      url: String,
+      duration: Number,
+      title: String
+    }],
+    interactive: {
+      type: {
+        type: String,
+        enum: ['map', 'timeline', 'drag-drop', 'matching', 'puzzle']
+      },
+      data: mongoose.Schema.Types.Mixed
+    }
+  },
+  learningPoints: [{
+    point: String,
+    importance: {
+      type: String,
+      enum: ['key', 'important', 'nice-to-know']
+    }
+  }],
+  difficulty: {
+    type: String,
+    enum: ['easy', 'medium', 'hard'],
+    default: 'medium'
+  },
+  estimatedDuration: Number, // in minutes
+  prerequisites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Lesson'
+  }],
+  quizzes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Quiz'
+  }],
+  resources: [{
+    title: String,
+    url: String,
+    type: String
+  }],
+  metadata: {
+    views: {
+      type: Number,
+      default: 0
+    },
+    completionRate: Number,
+    averageTimeSpent: Number,
+    likes: {
+      type: Number,
+      default: 0
+    },
+    shares: {
+      type: Number,
+      default: 0
+    }
+  },
+  isFree: {
+    type: Boolean,
+    default: true
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'archived'],
+    default: 'draft'
+  },
+  publishedAt: Date,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true
+});
+
+// Index for course lessons ordering
+lessonSchema.index({ course: 1, order: 1 });
